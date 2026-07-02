@@ -327,10 +327,14 @@ typedef __PTRDIFF_TYPE__ __ptrdiff_t;
 typedef long int __ptrdiff_t;
 #endif
 
-#ifdef __WCHAR_TYPE__
+#ifndef __WCHAR_TYPE__
+#if !defined(NEWLIB_UEFI_CLANG)
 typedef __WCHAR_TYPE__ __wchar_t;
+#endif
 #elif defined (__WCHAR_MAX__) && __WCHAR_MAX__ == 0xffff
+#if !defined(NEWLIB_UEFI_CLANG)
 typedef short unsigned int __wchar_t;
+#endif
 #else
 typedef int __wchar_t;
 #endif
