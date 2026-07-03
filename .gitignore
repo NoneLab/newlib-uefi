@@ -4,6 +4,7 @@
 *.rej
 
 build/
+install/
 
 *~
 .#*
@@ -48,3 +49,5 @@ core
 !core/
 
 lost+found
+
+lib/

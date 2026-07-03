@@ -2,9 +2,16 @@ cmake_minimum_required(VERSION 3.20)
 
 project(libc_uefi LANGUAGES C CXX)
 
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
 add_library(c_uefi STATIC)
 
 target_sources(c_uefi PRIVATE
+	newlib/libc/locale/setlocale.h 
+	newlib/libc/locale/locale.c 
+	newlib/libc/locale/localeconv.c
+
     newlib/libc/stdio/fiprintf.c 
     newlib/libc/stdio/fiscanf.c 
     newlib/libc/stdio/iprintf.c 
@@ -14,14 +21,14 @@ target_sources(c_uefi PRIVATE
     newlib/libc/stdio/sniprintf.c 
     newlib/libc/stdio/svfiprintf.c 
     newlib/libc/stdio/svfiscanf.c 
-    newlib/libc/stdio/svfprintf.c 
+    # newlib/libc/stdio/svfprintf.c 
     newlib/libc/stdio/svfscanf.c 
     newlib/libc/stdio/vdiprintf.c 
-    newlib/libc/stdio/vfprintf.c 
+    # newlib/libc/stdio/vfprintf.c 
     newlib/libc/stdio/vfiprintf.c 
     newlib/libc/stdio/vfiscanf.c 
     newlib/libc/stdio/vfscanf.c 
-    newlib/libc/stdio/vfwprintf.c 
+    # newlib/libc/stdio/vfwprintf.c 
     newlib/libc/stdio/viprintf.c 
     newlib/libc/stdio/viscanf.c 
     newlib/libc/stdio/vsiprintf.c 
@@ -37,7 +44,7 @@ target_sources(c_uefi PRIVATE
     newlib/libc/stdio/sswprint_r.c 
     newlib/libc/stdio/svfiwprintf.c 
     newlib/libc/stdio/svfiwscanf.c 
-    newlib/libc/stdio/svfwprintf.c 
+    # newlib/libc/stdio/svfwprintf.c 
     newlib/libc/stdio/svfwscanf.c 
     newlib/libc/stdio/vfiwprintf.c 
     newlib/libc/stdio/vfiwscanf.c 
@@ -261,6 +268,8 @@ target_sources(c_uefi PRIVATE
 	newlib/libc/string/xpg_strerror_r.c
 )
 
+add_library(UefiNewLib::c_uefi ALIAS c_uefi)
+
 target_compile_features(c_uefi PRIVATE cxx_std_26)
 
 target_compile_options(c_uefi PRIVATE
@@ -273,8 +282,8 @@ target_compile_options(c_uefi PRIVATE
 )
 
 target_include_directories(c_uefi PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/newlib/libc/include
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/newlib/libc/include>
+	$<INSTALL_INTERFACE:include>
 )
 
 target_compile_options(c_uefi PRIVATE
@@ -283,10 +292,37 @@ target_compile_options(c_uefi PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:-fno-threadsafe-statics>
 )
 
-target_compile_definitions(c_uefi PRIVATE
-    NEWLIB_UEFI_CLANG
+target_compile_definitions(c_uefi PUBLIC
+    NEWLIB_UEFI_CLANG=1
     LDBL_EQ_DBL
     _LDBL_EQ_DBL
+)
+
+configure_package_config_file(
+	${CMAKE_CURRENT_SOURCE_DIR}/cmake/UefiNewLibConfig.cmake.in
+	${CMAKE_CURRENT_BINARY_DIR}/UefiNewLibConfig.cmake
+	INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UefiNewLib
+)
+
+install(FILES
+	${CMAKE_CURRENT_BINARY_DIR}/UefiNewLibConfig.cmake
+	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UefiNewLib
+)
+
+install(TARGETS c_uefi
+	EXPORT UefiNewLibTargets
+	ARCHIVE DESTINATION lib
+	INCLUDES DESTINATION include
+)
+
+install(DIRECTORY newlib/libc/include/
+	DESTINATION include
+)
+
+install(EXPORT UefiNewLibTargets
+	FILE UefiNewLibTargets.cmake
+	NAMESPACE UefiNewLib::
+	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UefiNewLib
 )
 
 target_link_options(c_uefi PRIVATE
