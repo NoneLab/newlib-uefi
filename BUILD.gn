@@ -1,6 +1,8 @@
-config("newlib_public") {
+config("newlib_private") {
     include_dirs = [ "newlib/libc/include" ]
+}
 
+config("newlib_public") {
     defines = [
         "NEWLIB_UEFI_CLANG=1",
         "LDBL_EQ_DBL",
@@ -272,10 +274,13 @@ static_library("c_uefi") {
 
     configs = [
         "//build/config:freestanding_x64",
-        "//build/config:warnings"
+        "//build/config:warnings",
+        ":newlib_private"
     ]
 
-    public_configs = [":newlib_public"]
+    public_configs = [
+        ":newlib_public"
+    ]
 
     check_includes = false
 }
